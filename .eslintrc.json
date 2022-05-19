@@ -1,0 +1,55 @@
+{
+		"env": {
+			"node": true,
+			"es6": true,
+			"browser": true
+		},
+    "extends": [
+				"airbnb",
+        "plugin:prettier/recommended"
+    ],
+		"parser": "babel-eslint",
+    "plugins": [
+        "react-hooks"
+    ],
+    "rules": {
+				"react/jsx-filename-extension": [
+					1,
+					{
+						"extensions": [
+							".js",
+							".jsx"
+						]
+					}
+				],
+				"prettier/prettier": "error",
+				"no-console": "off",
+				"func-names": "off",
+				"no-process-exit": "off",
+				"object-shorthand": "off",
+				"class-methods-use-this": "off",
+				"react/jsx-one-expression-per-line": "off",
+				"implicit-arrow-linebreak": "off",
+				"react/jsx-no-bind": "off",
+				"comma-dangle": "off",
+				"react/prop-types": "warn",
+				"indent": "off",
+				"no-unused-vars": "warn",
+				"no-trailing-spaces": "off",
+				"no-underscore-dangle": "off",
+				"react/jsx-curly-newline": "off",
+				"react/no-unescaped-entities": "off",
+				"react/jsx-wrap-multilines": [
+					"error",
+					{
+						"declaration": false,
+						"assignment": false
+					}
+				],
+				"react-hooks/rules-of-hooks": "warn", // Checks rules of Hooks
+				"react-hooks/exhaustive-deps": "warn", // Checks effect dependencies
+				"camelcase": "off",
+				"no-param-reassign": "off",
+				"import/prefer-default-export": "off"
+    }
+}
