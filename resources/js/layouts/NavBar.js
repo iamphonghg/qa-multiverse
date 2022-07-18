@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import {
+  Badge,
   Box,
   Button,
   Flex,
@@ -19,12 +20,19 @@ import {
   HiOutlineBell,
   HiOutlineSearch,
   HiOutlineUserCircle,
-  HiOutlinePencilAlt
+  HiOutlinePencilAlt,
+  HiChevronDown
 } from 'react-icons/hi';
+import { useAuth } from '../contexts/AuthContext';
+import { useAppContext } from '../contexts/AppContext';
 
 const headerLinks = [
   { content: 'Trang chủ', icon: HiOutlineHome, to: '/' },
-  { content: 'Quản lý tin', icon: HiOutlineClipboardList, to: '/' },
+  {
+    content: 'Quản lý bài đăng',
+    icon: HiOutlineClipboardList,
+    to: '/'
+  },
   { content: 'Chat', icon: HiOutlineChatAlt2, to: '/' },
   { content: 'Thông báo', icon: HiOutlineBell, to: '/' }
 ];
@@ -32,8 +40,8 @@ const headerLinks = [
 export default function NavBar() {
   // const { setCurrentUser, setToken } = useAuth();
   const history = useNavigate();
-  // const { authenticated } = useAuth();
-
+  const { authenticated, currentUser } = useAuth();
+  const { verse, toggleSelectVerseModal } = useAppContext();
   // const handleLogOut = useCallback(() => {
   //   AuthAPI.logout().then((response) => {
   //     if (response.message) {
@@ -49,7 +57,7 @@ export default function NavBar() {
     <>
       <Box
         w="full"
-        backgroundColor="blue.300"
+        backgroundColor="purple.300"
         position="sticky"
         top={0}
         zIndex="1000"
@@ -59,6 +67,8 @@ export default function NavBar() {
             flex="0.3 1 auto"
             justifyContent="flex-start"
             textAlign="left"
+            alignItems="center"
+            gap={2}
           >
             <Link as={NavLink} to="/" _hover={{}} _focus={{}}>
               <Text
@@ -67,9 +77,24 @@ export default function NavBar() {
                 fontWeight="500"
                 fontFamily="logoFont"
               >
-                ChoGioi
+                qa-Multiverse
               </Text>
             </Link>
+            {verse ? (
+              <Box>
+                <Badge
+                  color="purple"
+                  bg="white"
+                  onClick={toggleSelectVerseModal}
+                  cursor="pointer"
+                >
+                  <Flex alignItems="center">
+                    <Text textTransform="uppercase">{verse}</Text>
+                    <Icon as={HiChevronDown} />
+                  </Flex>
+                </Badge>
+              </Box>
+            ) : null}
           </Flex>
           <Flex flex="0.7 0 auto" justifyContent="flex-end">
             <Flex gap={7} alignItems="center">
@@ -95,7 +120,7 @@ export default function NavBar() {
       </Box>
       <Box
         w="full"
-        backgroundColor="blue.300"
+        backgroundColor="purple.300"
         position="sticky"
         top={14}
         zIndex="1000"
@@ -112,7 +137,7 @@ export default function NavBar() {
             <Input
               pr="4rem"
               backgroundColor="white"
-              placeholder="Tìm kiếm trên Chợ Giời"
+              placeholder="Tìm kiếm câu hỏi"
               fontWeight="500"
             />
             <InputRightElement width="3.5rem">
@@ -125,14 +150,14 @@ export default function NavBar() {
                     as={HiOutlineSearch}
                     w={6}
                     h={6}
-                    color="blue.300"
+                    color="purple.300"
                   />
                 }
               />
             </InputRightElement>
           </InputGroup>
 
-          {false ? (
+          {authenticated ? (
             <Button
               fontSize="lg"
               bg="none"
@@ -140,7 +165,7 @@ export default function NavBar() {
               _active={{ bg: 'none' }}
               leftIcon={<Icon as={HiOutlineUserCircle} w={6} h={6} />}
             >
-              Username
+              {currentUser.display_name}
             </Button>
           ) : (
             <Button
@@ -156,14 +181,14 @@ export default function NavBar() {
           )}
           <Button
             fontSize="lg"
-            bg="blue.700"
+            bg="purple.700"
             color="white"
-            _hover={{ bg: 'blue.600' }}
-            _active={{ bg: 'blue.700' }}
+            _hover={{ bg: 'purple.600' }}
+            _active={{ bg: 'purple.700' }}
             leftIcon={<Icon as={HiOutlinePencilAlt} w={6} h={6} />}
             onClick={() => history('/create')}
           >
-            Đăng tin
+            Đăng bài
           </Button>
         </Flex>
       </Box>

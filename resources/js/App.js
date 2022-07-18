@@ -1,6 +1,11 @@
 import React from 'react';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import AppFrame from './layouts/AppFrame';
+import AuthProvider from './contexts/AuthContext';
+import AppProvider from './contexts/AppContext';
+
+const queryClient = new QueryClient();
 
 export default function App() {
   const theme = extendTheme({
@@ -19,7 +24,13 @@ export default function App() {
 
   return (
     <ChakraProvider theme={theme}>
-      <AppFrame />
+      <QueryClientProvider client={queryClient}>
+        <AppProvider>
+          <AuthProvider>
+            <AppFrame />
+          </AuthProvider>
+        </AppProvider>
+      </QueryClientProvider>
     </ChakraProvider>
   );
 }
