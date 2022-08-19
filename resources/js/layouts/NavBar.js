@@ -10,49 +10,66 @@ import {
   InputGroup,
   InputRightElement,
   Link,
-  Text
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Text,
+  useToast
 } from '@chakra-ui/react';
 import { Link as NavLink, useNavigate } from 'react-router-dom';
 import {
   HiOutlineHome,
   HiOutlineClipboardList,
-  HiOutlineChatAlt2,
-  HiOutlineBell,
   HiOutlineSearch,
   HiOutlineUserCircle,
   HiOutlinePencilAlt,
   HiChevronDown
 } from 'react-icons/hi';
-import { useAuth } from '../contexts/AuthContext';
+import { useUserAuth } from '../contexts/UserAuthContext';
 import { useAppContext } from '../contexts/AppContext';
+import UserAuthAPI from '../api/UserAuthAPI';
+import { setUserToken } from '../utils/userAuth';
 
 const headerLinks = [
   { content: 'Trang chủ', icon: HiOutlineHome, to: '/' },
   {
     content: 'Quản lý bài đăng',
     icon: HiOutlineClipboardList,
-    to: '/'
-  },
-  { content: 'Chat', icon: HiOutlineChatAlt2, to: '/' },
-  { content: 'Thông báo', icon: HiOutlineBell, to: '/' }
+    to: '/manage-posts'
+  }
 ];
 
 export default function NavBar() {
-  // const { setCurrentUser, setToken } = useAuth();
+  const toast = useToast();
   const history = useNavigate();
-  const { authenticated, currentUser } = useAuth();
+  const {
+    authenticated,
+    currentUser,
+    setCurrentUser
+  } = useUserAuth();
   const { verse, toggleSelectVerseModal } = useAppContext();
-  // const handleLogOut = useCallback(() => {
-  //   AuthAPI.logout().then((response) => {
-  //     if (response.message) {
-  //       setCurrentUser(null);
-  //       setToken(null);
-  //       history('/');
-  //       setIntendedUrl(null);
-  //     }
-  //   });
-  // }, [history, setCurrentUser, setToken]);
 
+  const handleLogOut = useCallback(() => {
+    UserAuthAPI.logout().then((response) => {
+      if (response.success) {
+        setCurrentUser(null);
+        setUserToken(null);
+        history('/');
+        toast({
+          title: response.message,
+          duration: 3000,
+          status: 'success'
+        });
+      } else {
+        toast({
+          title: 'Đăng xuất thất bại',
+          duration: 3000,
+          status: 'error'
+        });
+      }
+    });
+  }, [history, setCurrentUser, toast]);
   return (
     <>
       <Box
@@ -158,15 +175,36 @@ export default function NavBar() {
           </InputGroup>
 
           {authenticated ? (
-            <Button
-              fontSize="lg"
-              bg="none"
-              _hover={{ bg: 'none', color: 'gray.700' }}
-              _active={{ bg: 'none' }}
-              leftIcon={<Icon as={HiOutlineUserCircle} w={6} h={6} />}
-            >
-              {currentUser.display_name}
-            </Button>
+            <Menu>
+              <MenuButton
+                as={Button}
+                fontSize="lg"
+                bg="none"
+                _hover={{ bg: 'none', color: 'gray.700' }}
+                _active={{ bg: 'none' }}
+                leftIcon={
+                  <Icon as={HiOutlineUserCircle} w={6} h={6} />
+                }
+              >
+                {currentUser.display_name}
+              </MenuButton>
+              <MenuList>
+                <MenuItem
+                  fontWeight={500}
+                  onClick={() =>
+                    history(`/profile/${currentUser.id}`)
+                  }
+                >
+                  Trang cá nhân
+                </MenuItem>
+                <MenuItem
+                  fontWeight={500}
+                  onClick={() => handleLogOut()}
+                >
+                  Đăng xuất
+                </MenuItem>
+              </MenuList>
+            </Menu>
           ) : (
             <Button
               fontSize="lg"
@@ -188,7 +226,7 @@ export default function NavBar() {
             leftIcon={<Icon as={HiOutlinePencilAlt} w={6} h={6} />}
             onClick={() => history('/create')}
           >
-            Đăng bài
+            Đặt câu hỏi
           </Button>
         </Flex>
       </Box>

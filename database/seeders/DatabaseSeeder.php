@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostTag;
 use App\Models\Tag;
@@ -46,7 +47,7 @@ class DatabaseSeeder extends Seeder
                 $childPosts = Post::factory()->create([
                     'user_id' => rand(1, 50),
                     'university_id' => $post->university_id,
-                    'title' => $faker->sentence(),
+                    'title' => '',
                     'body' => $faker->paragraph(5),
                     'parent_id' => $postId
                 ]);
@@ -60,6 +61,21 @@ class DatabaseSeeder extends Seeder
             $post->save();
         }
 
+        foreach (range(1, 1800) as $postId) {
+            Comment::factory(1)->create([
+                'post_id' => $postId,
+                'user_id' => rand(1, 51)
+            ]);
+            Comment::factory(1)->create([
+                'post_id' => $postId,
+                'user_id' => rand(1, 51)
+            ]);
+            Comment::factory(1)->create([
+                'post_id' => $postId,
+                'user_id' => rand(1, 51)
+            ]);
+        }
+
         $voteTypes = ['upvote', 'downvote'];
         foreach (range(1, 10000) as $i) {
             Vote::factory()->create([
@@ -68,5 +84,31 @@ class DatabaseSeeder extends Seeder
                 'vote_type' => $voteTypes[rand(0, 1)]
             ]);
         }
+
+        foreach (range(1, 51) as $userId) {
+            $postIds = Post::where('user_id', $userId)->pluck('id');
+            $upvoteCount = 0;
+            $downvoteCount = 0;
+            foreach ($postIds as $id) {
+                $upvoteCount += Vote::where('post_id', $id)
+                    ->where('vote_type', 'upvote')
+                    ->count();
+                $downvoteCount += Vote::where('post_id', $id)
+                    ->where('vote_type', 'downvote')
+                    ->count();
+            }
+            $reputation = $upvoteCount * 10 + $downvoteCount * -2;
+            $user = User::find($userId);
+            $user->up_votes = $upvoteCount;
+            $user->down_votes = $downvoteCount;
+            $user->reputation = $reputation;
+            $user->save();
+        }
+
+        DB::table('admins')->insert([
+            'display_name' => 'Sudo',
+            'email' => 'sudo@qa.com',
+            'password' => Hash::make('123123123')
+        ]);
     }
 }

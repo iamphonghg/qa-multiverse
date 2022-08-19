@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import moment from 'moment';
 import AppFrame from './layouts/AppFrame';
-import AuthProvider from './contexts/AuthContext';
+import UserAuthProvider from './contexts/UserAuthContext';
 import AppProvider from './contexts/AppContext';
+import AdminAuthProvider from './contexts/AdminAuthContext';
 
 const queryClient = new QueryClient();
 
@@ -22,13 +24,19 @@ export default function App() {
     }
   });
 
+  useEffect(() => {
+    moment.locale('vi');
+  }, []);
+
   return (
     <ChakraProvider theme={theme}>
       <QueryClientProvider client={queryClient}>
         <AppProvider>
-          <AuthProvider>
-            <AppFrame />
-          </AuthProvider>
+          <AdminAuthProvider>
+            <UserAuthProvider>
+              <AppFrame />
+            </UserAuthProvider>
+          </AdminAuthProvider>
         </AppProvider>
       </QueryClientProvider>
     </ChakraProvider>

@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /**
-     * Create a new AuthController instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    protected function loginValidator(array $data)
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        return Validator::make($data, [
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|min:6',
+        ]);
     }
-
     /**
      * Get a JWT via given credentials.
      *
@@ -25,8 +26,37 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
+        $validator = $this->loginValidator($credentials);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+                'message' => 'Email hoặc mật khẩu không hợp lệ'
+            ]);
+        }
+
+        $user = User::where('email', request('email'))->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản không tồn tại'
+            ]);
+        }
+        if ($user->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Tài khoản của bạn đã bị khóa bởi quản trị viên do có hành vi bất thường'
+            ]);
+        }
+
         if (!$token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized']);
+            return response()->json([
+                'success' => false,
+                'message' => 'Email hoặc mật khẩu không chính xác'
+            ]);
         }
 
         return $this->respondWithToken($token);
@@ -49,7 +79,7 @@ class AuthController extends Controller
             // $user = User::create($newUser);
             DB::table('users')->insert($newUser);
             return response()->json(['success' => 'Registered successfully']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Registration error']);
         }
     }
@@ -73,7 +103,10 @@ class AuthController extends Controller
     {
         auth()->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully logged out'
+        ]);
     }
 
     /**
@@ -95,9 +128,12 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
-        return response()->json(['token' => [
-            'access_token' => $token,
-            'expires_in' => auth()->factory()->getTTL() * 60
-        ], 'user' => auth()->user()]);
+        return response()->json([
+            'success' => true,
+            'token' => [
+                'access_token' => $token,
+                'expires_in' => auth()->factory()->getTTL() * 60
+            ],
+            'user' => auth()->user()]);
     }
 }

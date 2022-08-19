@@ -4,12 +4,12 @@ import {
   LOG_OUT_ENDPOINT,
   REGISTER_ENDPOINT
 } from '../constants/endpoints';
-import { getToken } from '../utils/auth';
+import { getUserToken } from '../utils/userAuth';
 import instanceAxios from './base';
 
-class AuthAPI {
+class UserAuthAPI {
   static async getUser() {
-    const token = getToken();
+    const token = getUserToken();
     const response = await instanceAxios.get(GET_USER_ENDPOINT, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -33,7 +33,7 @@ class AuthAPI {
   }
 
   static async logout() {
-    const token = getToken();
+    const token = getUserToken();
     const response = await instanceAxios.get(LOG_OUT_ENDPOINT, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -43,4 +43,4 @@ class AuthAPI {
   }
 }
 
-export default AuthAPI;
+export default UserAuthAPI;

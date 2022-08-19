@@ -1,21 +1,27 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import PropTypes from 'prop-types';
 import { Navigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react';
-import { getToken, setToken } from '../utils/auth';
-import AuthAPI from '../api/AuthAPI';
+import { getUserToken, removeUserToken } from '../utils/userAuth';
+import AuthAPI from '../api/UserAuthAPI';
 
-const AuthContext = React.createContext();
+const UserAuthContext = createContext();
 
-function AuthProvider({ children }) {
+function UserAuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const authenticated = useMemo(() => !!currentUser, [currentUser]);
   const toast = useToast();
 
   const initAuth = async () => {
-    return getToken() ? AuthAPI.getUser() : Promise.resolve(null);
+    return getUserToken() ? AuthAPI.getUser() : Promise.resolve(null);
   };
 
   useEffect(() => {
@@ -31,38 +37,40 @@ function AuthProvider({ children }) {
           description: ' Vui lòng đăng nhập lại',
           status: 'warning'
         });
+        removeUserToken();
         return <Navigate to="/login" />;
       });
   }, [toast]);
 
   return (
-    <AuthContext.Provider
+    <UserAuthContext.Provider
       value={{
         initializing,
         authenticated,
         currentUser,
-        setToken,
         setCurrentUser
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </UserAuthContext.Provider>
   );
 }
 
-const useAuth = () => {
-  const context = React.useContext(AuthContext);
+const useUserAuth = () => {
+  const context = useContext(UserAuthContext);
 
   if (context === undefined) {
-    throw new Error(`useAuth must be used within a AuthProvider`);
+    throw new Error(
+      `useUserAuth must be used within a UserAuthProvider`
+    );
   }
 
   return context;
 };
 
-AuthProvider.propTypes = {
+UserAuthProvider.propTypes = {
   children: PropTypes.element.isRequired
 };
 
-export default AuthProvider;
-export { useAuth };
+export default UserAuthProvider;
+export { useUserAuth };

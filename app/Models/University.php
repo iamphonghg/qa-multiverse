@@ -12,4 +12,9 @@ class University extends Model
     public $timestamps = false;
 
     protected $fillable = ['name', 'slug'];
+
+    public function posts() {
+        return $this->hasMany(Post::class)
+            ->whereNull('parent_id');
+    }
 }

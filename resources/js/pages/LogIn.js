@@ -3,12 +3,9 @@ import React, { useCallback, useRef } from 'react';
 import {
   Box,
   Button,
-  Checkbox,
   Container,
-  Divider,
   FormControl,
   FormLabel,
-  Heading,
   HStack,
   IconButton,
   Input,
@@ -24,13 +21,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import { useForm } from 'react-hook-form';
-import { OAuthButtonGroup } from '../components/OAuthButtonGroup';
-import AuthAPI from '../api/AuthAPI';
-import { useAuth } from '../contexts/AuthContext';
-import { getIntendedUrl } from '../utils/auth';
+import AuthAPI from '../api/UserAuthAPI';
+import { useUserAuth } from '../contexts/UserAuthContext';
+import { getIntendedUrl, setUserToken } from '../utils/userAuth';
 
 export default function LogIn() {
-  const { setCurrentUser, setToken } = useAuth();
+  const { setCurrentUser } = useUserAuth();
   const history = useNavigate();
   const { isOpen, onToggle } = useDisclosure();
   const inputRef = useRef(null);
@@ -43,33 +39,44 @@ export default function LogIn() {
       inputRef.current.focus({ preventScroll: true });
     }
   };
-  // const wait = (ms) =>
-  // new Promise((resolve) => setTimeout(resolve, ms));
+
   const onSubmit = useCallback(
     (data) => {
-      AuthAPI.login(data).then((response) => {
-        console.log(response);
-        if (!response.error) {
-          setToken(response.token.access_token);
-          setCurrentUser(response.user);
+      AuthAPI.login(data)
+        .then((response) => {
+          console.log(response);
+          if (response.success) {
+            setUserToken(response.token.access_token);
+            setCurrentUser(response.user);
+            toast({
+              title: 'Đăng nhập thành công!',
+              position: 'top',
+              duration: 3000,
+              status: 'success'
+            });
+            history('/');
+          } else {
+            reset();
+            toast({
+              title: 'Đăng nhập thất bại!',
+              position: 'top',
+              description: response.message,
+              duration: 5000,
+              status: 'error'
+            });
+          }
+        })
+        .catch(() => {
           toast({
-            title: 'Đăng nhập thành công!',
-            duration: 3000,
-            status: 'success'
-          });
-          history(getIntendedUrl());
-        } else {
-          reset();
-          toast({
-            title: 'Email hoặc mật khẩu không chính xác!',
+            title: 'Lỗi không xác định!',
+            position: 'top',
             description: 'Vui lòng thử lại',
-            duration: 3000,
+            duration: 5000,
             status: 'error'
           });
-        }
-      });
+        });
     },
-    [history, reset, setCurrentUser, setToken, toast]
+    [history, reset, setCurrentUser, toast]
   );
 
   return (
@@ -140,19 +147,19 @@ export default function LogIn() {
                   </InputGroup>
                 </FormControl>
               </Stack>
-              <HStack justify="space-between">
+              {/* <HStack justify="space-between">
                 <Checkbox defaultIsChecked colorScheme="purple">
                   Nhớ mật khẩu
                 </Checkbox>
                 <Button variant="link" colorScheme="purple" size="sm">
                   Quên mật khẩu?
                 </Button>
-              </HStack>
+              </HStack> */}
               <Stack spacing="6">
                 <Button type="submit" colorScheme="purple">
                   Đăng nhập
                 </Button>
-                <HStack>
+                {/* <HStack>
                   <Divider />
                   <Text
                     fontSize="sm"
@@ -163,7 +170,7 @@ export default function LogIn() {
                   </Text>
                   <Divider />
                 </HStack>
-                <OAuthButtonGroup />
+                <OAuthButtonGroup /> */}
               </Stack>
             </Stack>
           </form>

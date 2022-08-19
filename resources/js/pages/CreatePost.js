@@ -29,7 +29,7 @@ import { HiOutlineX } from 'react-icons/hi';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import PostAPI from '../api/PostAPI';
-import { useAuth } from '../contexts/AuthContext';
+import { useUserAuth } from '../contexts/UserAuthContext';
 import { useAppContext } from '../contexts/AppContext';
 
 const colorSchemes = [
@@ -53,35 +53,18 @@ const colorSchemes = [
 ];
 
 export default function CreatePost() {
-  const schema = yup
-    .object()
-    .shape({
-      title: yup
-        .string()
-        .max(50, 'Bạn đã nhập quá 50 kí tự')
-        .required('Vui lòng điền tiêu đề'),
-      body: yup
-        .string()
-        .max(1500, 'Bạn đã nhập quá 1500 kí tự')
-        .required('Vui lòng điền mô tả')
-    })
-    // eslint-disable-next-line consistent-return
-    .when((values, thisSchema) => {
-      const extraConditions = {};
-
-      if (
-        values.category === 'smartphone' ||
-        values.category === 'tablet'
-      ) {
-        extraConditions.color = yup
-          .string()
-          .required('Vui lòng điền màu sắc');
-      }
-      // console.log(extraConditions);
-      return thisSchema.shape(extraConditions);
-    });
+  const schema = yup.object().shape({
+    title: yup
+      .string()
+      .max(50, 'Bạn đã nhập quá 50 kí tự')
+      .required('Vui lòng điền tiêu đề'),
+    body: yup
+      .string()
+      .max(1500, 'Bạn đã nhập quá 1500 kí tự')
+      .required('Vui lòng điền mô tả')
+  });
   const [isPosting, setIsPosting] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser } = useUserAuth();
   const { verse } = useAppContext();
   const toast = useToast();
   const history = useNavigate();
@@ -97,7 +80,7 @@ export default function CreatePost() {
     formState: { errors }
   } = useForm({
     mode: 'onChange',
-    defaultValues: { images: [], tags: [] },
+    defaultValues: { tags: [] },
     resolver: yupResolver(schema)
   });
   register('tags');
@@ -127,77 +110,58 @@ export default function CreatePost() {
     [setValue, tags]
   );
 
-  const handleImagesChange = useCallback(
-    (e) => {
-      const imagesArray = [];
-      for (let i = 0; i < e.target.files.length; i += 1) {
-        imagesArray.push(e.target.files[i]);
-      }
-      setValue('images', [...getValues('images'), ...imagesArray]);
-      trigger('images'); // trigger validate after images change
-    },
-    [getValues, setValue, trigger]
-  );
+  // const handleImagesChange = useCallback(
+  //   (e) => {
+  //     const imagesArray = [];
+  //     for (let i = 0; i < e.target.files.length; i += 1) {
+  //       imagesArray.push(e.target.files[i]);
+  //     }
+  //     setValue('images', [...getValues('images'), ...imagesArray]);
+  //     trigger('images'); // trigger validate after images change
+  //   },
+  //   [getValues, setValue, trigger]
+  // );
 
-  const handleRemoveImage = useCallback(
-    (index) => {
-      setValue(
-        'images',
-        getValues('images').filter((_, i) => i !== index)
-      );
-      trigger('images'); // trigger validate after images change
-    },
-    [getValues, setValue, trigger]
-  );
+  // const handleRemoveImage = useCallback(
+  //   (index) => {
+  //     setValue(
+  //       'images',
+  //       getValues('images').filter((_, i) => i !== index)
+  //     );
+  //     trigger('images'); // trigger validate after images change
+  //   },
+  //   [getValues, setValue, trigger]
+  // );
 
   const onSubmit = useCallback(
     (data) => {
-      // console.log(data);
-      const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        if (key !== 'images') formData.append(key, data[key]);
-      });
-      formData.append('verse', verse);
-      for (let i = 0; i < getValues('images').length; i += 1) {
-        formData.append('images[]', getValues('images')[i]);
-      }
+      console.log(data);
       setIsPosting(true);
-      PostAPI.create(formData).then((response) => {
+      data.verse = verse;
+
+      PostAPI.create(data).then((response) => {
         // console.log(response);
         setIsPosting(false);
-        if (response.error) {
+        if (!response.success) {
           toast({
             title: 'Đã có lỗi xảy ra!',
-            description: response.error.message,
+            description: response.message,
             duration: 3000,
-            status: 'error',
-            isClosable: true
+            status: 'error'
           });
         } else {
           toast({
             title: 'Đăng bài thành công',
             duration: 3000,
-            status: 'success',
-            isClosable: true
+            status: 'success'
           });
-          history(`/posts/${response.newPostId}`);
+          history(`/posts/${verse}/${response.newPostId}`);
           reset();
         }
       });
     },
-    [getValues, history, reset, toast, verse]
+    [history, reset, toast, verse]
   );
-
-  useEffect(() => {
-    if (Object.keys(errors).length !== 0) {
-      toast({
-        title: 'Không được để trống các trường bắt buộc',
-        description: 'Vui lòng kiểm tra lại',
-        status: 'warning',
-        duration: 3000
-      });
-    }
-  }, [errors, toast]);
 
   return (
     <Box
@@ -211,7 +175,7 @@ export default function CreatePost() {
     >
       <Flex flexDirection="column">
         <Flex justifyContent="space-between">
-          <Box flexShrink={0} maxW="2xs" width="100%">
+          {/* <Box flexShrink={0} maxW="2xs" width="100%">
             <Flex
               bg="white"
               boxShadow="sm"
@@ -270,20 +234,18 @@ export default function CreatePost() {
                 <Text color="red">{errors.images.message}</Text>
               ) : null}
             </Flex>
-          </Box>
-          <form
+          </Box> */}
+          <Box
+            as="form"
             onSubmit={handleSubmit(onSubmit)}
             onKeyDown={(e) => {
               if (e.keyCode === 'Enter') e.preventDefault();
             }}
-            className="Notification-Form"
-            style={{ maxWidth: '36rem', width: '100%' }}
+            w="full"
           >
             <Box
               bg="white"
-              marginInlineStart={8}
               mt={0}
-              marginInlineEnd={0}
               mb={0}
               w="100%"
               boxShadow="sm"
@@ -382,16 +344,15 @@ export default function CreatePost() {
                 paddingInlineEnd={6}
               >
                 <Button
-                  bg="blue.700"
                   isLoading={isPosting}
                   type="submit"
-                  colorScheme="blue"
+                  colorScheme="purple"
                 >
-                  Đăng bài
+                  Đăng câu hỏi
                 </Button>
               </Flex>
             </Box>
-          </form>
+          </Box>
         </Flex>
       </Flex>
     </Box>

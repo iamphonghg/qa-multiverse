@@ -1,12 +1,13 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Box,
   Button,
+  Checkbox,
   Container,
+  Divider,
   FormControl,
   FormLabel,
-  Heading,
   HStack,
   IconButton,
   Input,
@@ -22,40 +23,19 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import { useForm } from 'react-hook-form';
-import UserAuthAPI from '../api/UserAuthAPI';
+import { OAuthButtonGroup } from '../components/OAuthButtonGroup';
+import AdminAuthAPI from '../api/AdminAuthAPI';
+import { setAdminToken } from '../utils/adminAuth';
+import { useAdminAuth } from '../contexts/AdminAuthContext';
 
-export default function SignUp() {
+export default function AdminLogIn() {
+  const { setCurrentAdmin } = useAdminAuth();
   const history = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { isOpen, onToggle } = useDisclosure();
   const inputRef = useRef(null);
-  const { register, handleSubmit, reset } = useForm();
   const toast = useToast();
-
-  const onSubmit = useCallback(
-    (data) => {
-      console.log(data);
-      UserAuthAPI.register(data).then((response) => {
-        if (!response.error) {
-          toast({
-            title: 'Đăng ký thành công',
-            description: 'Vui lòng đăng nhập vào hệ thống',
-            duration: 3000,
-            status: 'success'
-          });
-          history('/login');
-        } else {
-          reset();
-          toast({
-            title: 'Email đã tồn tại',
-            description: 'Vui lòng thử lại',
-            duration: 3000,
-            status: 'error'
-          });
-        }
-      });
-    },
-    [history, reset, toast]
-  );
+  const { register, handleSubmit, reset } = useForm();
 
   const onClickReveal = () => {
     onToggle();
@@ -63,6 +43,45 @@ export default function SignUp() {
       inputRef.current.focus({ preventScroll: true });
     }
   };
+  // const wait = (ms) =>
+  // new Promise((resolve) => setTimeout(resolve, ms));
+  const onSubmit = useCallback(
+    (data) => {
+      setIsSubmitting(true);
+      AdminAuthAPI.login(data)
+        .then((response) => {
+          setIsSubmitting(false);
+          if (!response.error) {
+            setAdminToken(response.token.admin_access_token);
+            setCurrentAdmin(response.admin);
+            toast({
+              title: 'Đăng nhập thành công!',
+              duration: 3000,
+              status: 'success'
+            });
+            history('/admin');
+          } else {
+            reset();
+            toast({
+              title: 'Email hoặc mật khẩu không chính xác!',
+              description: 'Vui lòng thử lại',
+              duration: 3000,
+              status: 'error'
+            });
+          }
+        })
+        .catch(() => {
+          setIsSubmitting(false);
+          toast({
+            title: 'Lỗi không xác định',
+            description: 'Vui lòng thử lại',
+            duration: 3000,
+            status: 'error'
+          });
+        });
+    },
+    [history, reset, setCurrentAdmin, toast]
+  );
 
   return (
     <Container
@@ -72,10 +91,12 @@ export default function SignUp() {
       h="full"
     >
       <Stack spacing="8">
-        <Stack spacing="6" textAlign="center">
-          <Text fontSize="3xl" fontWeight="bold" lineHeight="1.2">
-            Đăng ký tài khoản
-          </Text>
+        <Stack spacing="6">
+          <Stack spacing="2" textAlign="center">
+            <Text fontSize="3xl" fontWeight="bold" lineHeight="1.2">
+              Đăng nhập vào Trang quản lý
+            </Text>
+          </Stack>
         </Stack>
         <Box
           py={{ base: '0', sm: '8' }}
@@ -92,20 +113,19 @@ export default function SignUp() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing="6">
               <Stack spacing="5">
-                <FormControl isRequired>
-                  <FormLabel htmlFor="fullName">Họ tên</FormLabel>
-                  <Input {...register('fullName')} />
-                </FormControl>
-
-                <FormControl isRequired>
+                <FormControl>
                   <FormLabel htmlFor="email">Email</FormLabel>
-                  <Input type="email" {...register('email')} />
+                  <Input
+                    focusBorderColor="purple.500"
+                    type="email"
+                    {...register('email')}
+                  />
                 </FormControl>
-
                 <FormControl isRequired>
                   <FormLabel htmlFor="password">Mật khẩu</FormLabel>
                   <InputGroup>
                     <Input
+                      focusBorderColor="purple.500"
                       ref={inputRef}
                       type={isOpen ? 'text' : 'password'}
                       autoComplete="current-password"
@@ -121,21 +141,14 @@ export default function SignUp() {
                   </InputGroup>
                 </FormControl>
               </Stack>
-
               <Stack spacing="6">
-                <Button type="submit" colorScheme="purple">
-                  Đăng ký
+                <Button
+                  type="submit"
+                  colorScheme="purple"
+                  isLoading={isSubmitting}
+                >
+                  Đăng nhập
                 </Button>
-                <HStack justify="center">
-                  <Text color="muted">Đã có tài khoản?</Text>
-                  <Button
-                    variant="link"
-                    colorScheme="purple"
-                    onClick={() => history('/login')}
-                  >
-                    Đăng nhập
-                  </Button>
-                </HStack>
               </Stack>
             </Stack>
           </form>

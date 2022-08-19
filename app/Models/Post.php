@@ -10,7 +10,15 @@ class Post extends Model
 {
     use HasFactory;
 
-    protected $appends = ['score', 'isUpvoted', 'isDownvoted', 'answersCount'];
+    protected $appends = [
+        'score',
+        'isUpvoted',
+        'isDownvoted',
+        'answersCount',
+        'isAcceptedAnswer',
+        'upvoteCount',
+        'downvoteCount',
+    ];
     public $timestamps = false;
 
     protected $fillable = [
@@ -22,7 +30,19 @@ class Post extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Tag::class, 'post_tags', 'post_id', 'tag_id');
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+
+    public function comments() {
+        return $this->hasMany(Comment::class)->with('user');
+    }
+
+    public function university() {
+        return $this->belongsTo(University::class);
     }
 
     public function getScoreAttribute()
@@ -37,6 +57,24 @@ class Post extends Model
         ])->count();
 
         return $upvoteCount - $downvoteCount;
+    }
+    public function getUpvoteCountAttribute()
+    {
+        $upvoteCount = Vote::where([
+            ['post_id', '=', $this->id],
+            ['vote_type', '=', 'upvote']
+        ])->count();
+
+        return $upvoteCount;
+    }
+    public function getDownvoteCountAttribute()
+    {
+        $downvoteCount = Vote::where([
+            ['post_id', '=', $this->id],
+            ['vote_type', '=', 'downvote']
+        ])->count();
+
+        return $downvoteCount;
     }
 
     public function getIsUpvotedAttribute() {
@@ -58,6 +96,17 @@ class Post extends Model
     public function getAnswersCountAttribute() {
         return Post::where('parent_id', $this->id)
             ->count();
+    }
+
+    public function getIsAcceptedAnswerAttribute() {
+        $parentPost = Post::where('id', $this->parent_id)
+            ->first();
+        if ($parentPost) {
+            if ($parentPost->accepted_answer_id == $this->id) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

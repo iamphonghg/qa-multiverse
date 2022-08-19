@@ -1,44 +1,125 @@
+/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable no-nested-ternary */
-import { Flex, Spinner } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Box,
+  Button,
+  Flex,
+  Text,
+  Textarea,
+  useToast
+} from '@chakra-ui/react';
+import moment from 'moment';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import PostAPI from '../api/PostAPI';
+import DetailPostCard from '../components/DetailPostCard';
+import NotFound from './NotFound';
 import PostAnswerCard from '../components/PostAnswerCard';
-import PostCard from '../components/PostCard';
-import PostNotFound from '../components/PostNotFound';
-import { useAppContext } from '../contexts/AppContext';
+import { useUserAuth } from '../contexts/UserAuthContext';
 
 export default function DetailPost() {
-  const { id } = useParams();
-  const { verse } = useAppContext();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { isLoading, data } = useQuery(
-    ['detail-post', verse, id],
-    () => PostAPI.show(verse, id)
+  const toast = useToast();
+  const { verse, id } = useParams();
+  const { authenticated } = useUserAuth();
+  const { register, handleSubmit, reset } = useForm();
+  const { isLoading, data, refetch } = useQuery(
+    ['getPostAnswersIds', verse, id],
+    () => PostAPI.getPostAnswersIds(verse, id)
   );
 
-  console.log(data);
+  const handleAnswer = useCallback(
+    ({ answer }) => {
+      if (authenticated) {
+        setIsSubmitting(true);
+        PostAPI.create({
+          verse: verse,
+          body: answer,
+          parentId: id
+        })
+          .then((response) => {
+            setIsSubmitting(false);
+            toast({
+              title: response.message,
+              duration: 3000,
+              status: response.success ? 'success' : 'error'
+            });
+            reset();
+            refetch();
+          })
+          .catch(() => {
+            setIsSubmitting(false);
+            toast({
+              title: 'Lỗi không xác định',
+              duration: 3000,
+              status: 'error'
+            });
+          });
+      } else {
+        toast({
+          title: 'Vui lòng đăng nhập để sử dụng',
+          duration: 3000,
+          status: 'warning',
+          position: 'top'
+        });
+      }
+    },
+    [authenticated, id, refetch, reset, toast, verse]
+  );
 
-  return isLoading ? (
-    <Spinner />
-  ) : data.error ? (
-    <PostNotFound />
-  ) : (
-    <Flex
-      w="5xl"
-      minW="sm"
-      mx="auto"
-      my={8}
-      gap={8}
-      flexDir="column"
-      alignItems="flex-end"
-    >
-      <PostCard post={data.post} isDetailPage />
-      <Flex w="80%" gap={8} flexDir="column">
-        {data.postAnswers.map((answer) => (
-          <PostAnswerCard post={answer} isDetailPage />
+  if (isLoading) return null;
+
+  if (!isLoading && !data?.success) return <NotFound />;
+
+  return (
+    <Flex w="5xl" minW="sm" mx="auto" my={8} gap={8} flexDir="column">
+      <DetailPostCard verse={verse} postId={id} />
+      <Flex
+        background="white"
+        boxShadow="xl"
+        borderRadius="md"
+        flexDir="column"
+      >
+        <Box p={4}>
+          <Text fontWeight={500} fontSize="2xl" mb={2}>
+            {data.postAnswersIds.length} câu trả lời
+          </Text>
+        </Box>
+        {data.postAnswersIds.map((postAnswerId, i) => (
+          <PostAnswerCard
+            key={`postanswer-${i + 1}`}
+            verse={verse}
+            postId={postAnswerId}
+            parentAuthorId={data.authorId}
+          />
         ))}
+        <Flex
+          p={4}
+          flexDir="column"
+          gap={4}
+          as="form"
+          onSubmit={handleSubmit(handleAnswer)}
+        >
+          <Text fontWeight={500} fontSize="2xl">
+            Câu trả lời của bạn
+          </Text>
+          <Textarea
+            {...register('answer', { required: true })}
+            rows={6}
+            focusBorderColor="purple.500"
+          />
+          <Button
+            type="submit"
+            w="200px"
+            colorScheme="purple"
+            isLoading={isSubmitting}
+          >
+            Trả lời
+          </Button>
+        </Flex>
       </Flex>
     </Flex>
   );

@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import PropTypes from 'prop-types';
 import SelectVerseModal from '../components/SelectVerseModal';
+import useVerseName from '../hooks/useVerseName';
 
 const AppContext = React.createContext();
 
 const verses = ['hust', 'neu', 'nuce', 'hou'];
 
 function AppProvider({ children }) {
-  const [verse, setVerse] = useState('');
+  const [verse, setVerse] = useVerseName();
   const [
     isOpenSelectVerseModal,
     setIsOpenSelectVerseModal
@@ -19,13 +20,11 @@ function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const currentVerse = localStorage.getItem('verse');
-    if (!verses.includes(currentVerse)) {
+    console.log('lol', verse);
+    if (!verses.includes(verse)) {
       setIsOpenSelectVerseModal(true);
-    } else {
-      setVerse(currentVerse);
     }
-  }, []);
+  }, [verse]);
 
   return (
     <AppContext.Provider

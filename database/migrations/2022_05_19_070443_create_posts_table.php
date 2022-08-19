@@ -19,7 +19,7 @@ class CreatePostsTable extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('university_id')->constrained();
-            $table->string('title');
+            $table->string('title')->nullable();
             $table->text('body');
             $table->string('status')->nullable();
             $table->timestamp('created_at')->useCurrent();
