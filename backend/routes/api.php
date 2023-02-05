@@ -20,6 +20,8 @@ Route::prefix('user')->group(function () {
     Route::get('getPostAnswer/{verse}/{id}', [PostController::class, 'getPostAnswer']);
     Route::get('getUserInfo/{id}', [UserController::class, 'getUserInfo']);
 
+    Route::get('getRelatedPosts/{id}', [PostController::class, 'getRelatedPosts']);
+
     Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::get('logout',  [AuthController::class, 'logout']);

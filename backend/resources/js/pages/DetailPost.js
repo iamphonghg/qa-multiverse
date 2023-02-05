@@ -18,6 +18,7 @@ import DetailPostCard from '../components/DetailPostCard';
 import NotFound from './NotFound';
 import PostAnswerCard from '../components/PostAnswerCard';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import RelatedPosts from '../components/RelatedPosts';
 
 export default function DetailPost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,52 +76,55 @@ export default function DetailPost() {
   if (!isLoading && !data?.success) return <NotFound />;
 
   return (
-    <Flex w="5xl" minW="sm" mx="auto" my={8} gap={8} flexDir="column">
-      <DetailPostCard verse={verse} postId={id} />
-      <Flex
-        background="white"
-        boxShadow="xl"
-        borderRadius="md"
-        flexDir="column"
-      >
-        <Box p={4}>
-          <Text fontWeight={500} fontSize="2xl" mb={2}>
-            {data.postAnswersIds.length} câu trả lời
-          </Text>
-        </Box>
-        {data.postAnswersIds.map((postAnswerId, i) => (
-          <PostAnswerCard
-            key={`postanswer-${i + 1}`}
-            verse={verse}
-            postId={postAnswerId}
-            parentAuthorId={data.authorId}
-          />
-        ))}
+    <Flex gap={8} my={8} justifyContent="center">
+      <Flex w="5xl" minW="sm" gap={8} flexDir="column">
+        <DetailPostCard verse={verse} postId={id} />
         <Flex
-          p={4}
+          background="white"
+          boxShadow="xl"
+          borderRadius="md"
           flexDir="column"
-          gap={4}
-          as="form"
-          onSubmit={handleSubmit(handleAnswer)}
         >
-          <Text fontWeight={500} fontSize="2xl">
-            Câu trả lời của bạn
-          </Text>
-          <Textarea
-            {...register('answer', { required: true })}
-            rows={6}
-            focusBorderColor="purple.500"
-          />
-          <Button
-            type="submit"
-            w="200px"
-            colorScheme="purple"
-            isLoading={isSubmitting}
+          <Box p={4}>
+            <Text fontWeight={500} fontSize="2xl" mb={2}>
+              {data.postAnswersIds.length} câu trả lời
+            </Text>
+          </Box>
+          {data.postAnswersIds.map((postAnswerId, i) => (
+            <PostAnswerCard
+              key={`postanswer-${i + 1}`}
+              verse={verse}
+              postId={postAnswerId}
+              parentAuthorId={data.authorId}
+            />
+          ))}
+          <Flex
+            p={4}
+            flexDir="column"
+            gap={4}
+            as="form"
+            onSubmit={handleSubmit(handleAnswer)}
           >
-            Trả lời
-          </Button>
+            <Text fontWeight={500} fontSize="2xl">
+              Câu trả lời của bạn
+            </Text>
+            <Textarea
+              {...register('answer', { required: true })}
+              rows={6}
+              focusBorderColor="purple.500"
+            />
+            <Button
+              type="submit"
+              w="200px"
+              colorScheme="purple"
+              isLoading={isSubmitting}
+            >
+              Trả lời
+            </Button>
+          </Flex>
         </Flex>
       </Flex>
+      <RelatedPosts postId={id} verse={verse} />
     </Flex>
   );
 }

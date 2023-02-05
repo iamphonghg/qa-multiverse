@@ -5,10 +5,6 @@ import {
   Button,
   Flex,
   Icon,
-  IconButton,
-  Input,
-  InputGroup,
-  InputRightElement,
   Link,
   Menu,
   MenuButton,
@@ -21,7 +17,6 @@ import { Link as NavLink, useNavigate } from 'react-router-dom';
 import {
   HiOutlineHome,
   HiOutlineClipboardList,
-  HiOutlineSearch,
   HiOutlineUserCircle,
   HiOutlinePencilAlt,
   HiChevronDown
@@ -30,6 +25,7 @@ import { useUserAuth } from '../contexts/UserAuthContext';
 import { useAppContext } from '../contexts/AppContext';
 import UserAuthAPI from '../api/UserAuthAPI';
 import { setUserToken } from '../utils/userAuth';
+import SearchBox from '../components/SearchBox';
 
 const headerLinks = [
   { content: 'Trang chủ', icon: HiOutlineHome, to: '/' },
@@ -150,29 +146,7 @@ export default function NavBar() {
           m="0 auto"
           gap={12}
         >
-          <InputGroup size="md" w="65%">
-            <Input
-              pr="4rem"
-              backgroundColor="white"
-              placeholder="Tìm kiếm câu hỏi"
-              fontWeight="500"
-            />
-            <InputRightElement width="3.5rem">
-              <IconButton
-                h={6}
-                colorScheme="none"
-                size="sm"
-                icon={
-                  <Icon
-                    as={HiOutlineSearch}
-                    w={6}
-                    h={6}
-                    color="purple.300"
-                  />
-                }
-              />
-            </InputRightElement>
-          </InputGroup>
+          <SearchBox />
 
           {authenticated ? (
             <Menu>

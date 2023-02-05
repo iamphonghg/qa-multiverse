@@ -22,11 +22,52 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $tags = [
+            'javascript',
+            'python',
+            'java',
+            'c#',
+            'php',
+            'android',
+            'html',
+            'jquery',
+            'c++',
+            'css',
+            'ios',
+            'mysql',
+            'sql',
+            'r',
+            'node.js',
+            'reactjs',
+            'arrays',
+            'c',
+            'asp.net',
+            'json',
+            'ruby-on-rails',
+            '.net',
+            'sql-server',
+            'giaitich',
+            'cautrucdulieu',
+            'linhtinh',
+            'django',
+            'objective-c',
+            'angular',
+            'swift',
+            'excel',
+            'powerpoint',
+            'linux',
+            'iphone'
+        ];
         $faker = Faker::create();
 
         $this->call([UniversitySeeder::class]);
         User::factory(50)->create();
-        Tag::factory(150)->create();
+        foreach ($tags as $tag) {
+            Tag::factory()->create([
+                'name' => $tag,
+                'description' => $faker->paragraph(3)
+            ]);
+        }
         Post::factory(300)->create();
 
         DB::table('users')->insert([
@@ -38,7 +79,7 @@ class DatabaseSeeder extends Seeder
         foreach (range(1, 300) as $postId) {
             PostTag::factory()->create([
                 'post_id' => $postId,
-                'tag_id' => rand(1, 150)
+                'tag_id' => rand(1, count($tags))
             ]);
             $post = Post::find($postId);
 

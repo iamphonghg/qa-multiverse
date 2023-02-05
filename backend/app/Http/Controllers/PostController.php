@@ -258,4 +258,35 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function getRelatedPosts($id) {
+        $post = Post::find($id);
+        if (!$post) {
+            return [
+                'success' => true,
+                'relatedPosts' => []
+            ];
+        }
+
+        $relatedPosts = collect([]);
+
+        $tags = $post->tags;
+
+        foreach ($tags as $tag) {
+            $posts = $tag->posts;
+            foreach ($posts as $post) {
+                $relatedPosts->push($post);
+            }
+        }
+
+        $relatedPosts = $relatedPosts->where('id', '!=', $id)
+            ->where('university_id', $post->university_id)
+            ->whereNull('parent_id')
+            ->values();
+
+        return [
+            'success' => true,
+            'relatedPosts' => $relatedPosts->toArray()
+        ];
+    }
+
 }

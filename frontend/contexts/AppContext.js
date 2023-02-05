@@ -1,10 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState
+} from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import PropTypes from 'prop-types';
 import SelectVerseModal from '../components/SelectVerseModal';
 import useVerseName from '../hooks/useVerseName';
 
-const AppContext = React.createContext();
+const AppContext = createContext();
 
 const verses = ['hust', 'neu', 'nuce', 'hou'];
 
@@ -43,7 +49,7 @@ function AppProvider({ children }) {
 }
 
 const useAppContext = () => {
-  const context = React.useContext(AppContext);
+  const context = useContext(AppContext);
 
   if (context === undefined) {
     throw new Error(

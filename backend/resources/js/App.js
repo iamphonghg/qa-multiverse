@@ -20,7 +20,7 @@ export default function App() {
     },
     fonts: {
       body: "'SF Pro Display', sans-serif",
-      logoFont: "'Sofia', cursive;"
+      logoFont: "'Sofia', cursive;",
     }
   });
 
