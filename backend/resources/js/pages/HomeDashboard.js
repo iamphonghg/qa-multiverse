@@ -35,8 +35,8 @@ const StatCard = ({ title, number = 0 }) => {
 };
 
 export default function HomeDashboard() {
-  const [postStatsYear, setPostStatsYear] = useState(2022);
-  const [userStatsYear, setUserStatsYear] = useState(2022);
+  const [postStatsYear, setPostStatsYear] = useState(2023);
+  const [userStatsYear, setUserStatsYear] = useState(2023);
 
   const {
     data: allQuestionsCount,
@@ -205,6 +205,7 @@ export default function HomeDashboard() {
               width={20}
               onChange={(e) => setPostStatsYear(e.target.value)}
             >
+              <option>2023</option>
               <option>2022</option>
               <option>2021</option>
             </Select>
@@ -230,6 +231,7 @@ export default function HomeDashboard() {
               width={20}
               onChange={(e) => setUserStatsYear(e.target.value)}
             >
+              <option>2023</option>
               <option>2022</option>
               <option>2021</option>
             </Select>
