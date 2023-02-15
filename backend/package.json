@@ -33,10 +33,12 @@
         "@emotion/react": "^11.9.0",
         "@emotion/styled": "^11.8.1",
         "@hookform/resolvers": "^2.8.9",
+        "@tinymce/tinymce-react": "^4.3.0",
         "axios": "^0.21",
         "chakra-ui-simple-autocomplete": "^2.3.0",
         "chart.js": "^3.9.1",
         "framer-motion": "^6.3.2",
+        "fs-extra": "^11.1.0",
         "laravel-mix": "^6.0.43",
         "moment": "^2.29.4",
         "proptypes": "^1.1.0",
@@ -51,6 +53,7 @@
         "react-router-dom": "^6.2.2",
         "react-slick": "^0.29.0",
         "slick-carousel": "^1.8.1",
+        "tinymce": "^6.3.1",
         "yup": "^0.32.11"
     }
 }

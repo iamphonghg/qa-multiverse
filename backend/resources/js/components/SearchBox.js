@@ -15,9 +15,9 @@ export default function SearchBox() {
 
   return (
     <Flex>
-      {/* <InputGroup size="md" w="65%">
+      <InputGroup size="md" w="65%">
         <Input
-          pr="4rem"
+          pr="25rem"
           backgroundColor="white"
           placeholder="Tìm kiếm câu hỏi"
           fontWeight="500"
@@ -37,8 +37,8 @@ export default function SearchBox() {
             }
           />
         </InputRightElement>
-      </InputGroup> */}
-      <Autocomplete
+      </InputGroup>
+      {/* <Autocomplete
         getItemValue={(item) => item.label}
         items={[
           { label: 'apple' },
@@ -57,7 +57,7 @@ export default function SearchBox() {
         value={inputString}
         onChange={(e) => setInputString(e.target.value)}
         onSelect={(val) => setInputString(val)}
-      />
+      /> */}
     </Flex>
   );
 }
