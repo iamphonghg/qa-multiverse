@@ -20,6 +20,9 @@ import AdminLogIn from '../pages/AdminLogIn';
 import Users from '../pages/Users';
 import HomeDashboard from '../pages/HomeDashboard';
 import DashboardLayout from './DashboardLayout';
+import Posts from '../pages/Posts';
+import Reports from '../pages/Reports';
+import Notifications from '../pages/Notifications';
 
 export default function AppFrame() {
   const {
@@ -121,6 +124,36 @@ export default function AppFrame() {
                 <Navigate to="/admin/login" replace />
               ) : (
                 <Users />
+              )
+            }
+          />
+          <Route
+            path="posts"
+            element={
+              !adminAuthenticated ? (
+                <Navigate to="/admin/login" replace />
+              ) : (
+                <Posts />
+              )
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              !adminAuthenticated ? (
+                <Navigate to="/admin/login" replace />
+              ) : (
+                <Reports />
+              )
+            }
+          />
+          <Route
+            path="notifications"
+            element={
+              !adminAuthenticated ? (
+                <Navigate to="/admin/login" replace />
+              ) : (
+                <Notifications />
               )
             }
           />

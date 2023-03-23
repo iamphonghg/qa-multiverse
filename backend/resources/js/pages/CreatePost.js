@@ -2,7 +2,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-children-prop */
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   Badge,
   Box,
@@ -23,11 +23,12 @@ import {
   useToast
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { HiOutlineX } from 'react-icons/hi';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useMutation } from 'react-query';
 import PostAPI from '../api/PostAPI';
 import { useUserAuth } from '../contexts/UserAuthContext';
 import { useAppContext } from '../contexts/AppContext';
@@ -63,7 +64,6 @@ export default function CreatePost() {
       .max(1500, 'Bạn đã nhập quá 1500 kí tự')
       .required('Vui lòng điền mô tả')
   });
-  const [isPosting, setIsPosting] = useState(false);
   const { currentUser } = useUserAuth();
   const { verse } = useAppContext();
   const toast = useToast();
@@ -74,24 +74,52 @@ export default function CreatePost() {
     watch,
     setValue,
     getValues,
-    trigger,
-    unregister,
     reset,
     formState: { errors }
   } = useForm({
     mode: 'onChange',
-    defaultValues: { tags: [] },
+    defaultValues: { tags: [], images: [] },
     resolver: yupResolver(schema)
   });
   register('tags');
   const tags = watch('tags');
+  const { mutate: createPost, isLoading: isPosting } = useMutation(
+    (formData) => PostAPI.create(formData),
+    {
+      onSuccess: (response) => {
+        if (response.success) {
+          toast({
+            title: response.message,
+            duration: 3000,
+            status: 'success'
+          });
+          reset();
+          history(`/posts/${verse}/${response.newPostId}`);
+        } else {
+          toast({
+            title: 'Đã có lỗi xảy ra!',
+            description: response.message,
+            duration: 3000,
+            status: 'error'
+          });
+        }
+      },
+      onError: () => {
+        toast({
+          title: 'Xảy ra lỗi không xác định',
+          status: 'error',
+          position: 'top',
+          duration: 3000
+        });
+      }
+    }
+  );
 
   const handleAddTag = useCallback(
     (e) => {
       if (e.key === 'Enter' || e.key === 'Space') {
         e.preventDefault();
-        if (e.target.value) {
-          console.log(e.target.value);
+        if (e.target.value && e.target.value.trim()) {
           setValue('tags', [...tags, e.target.value]);
           e.target.value = '';
         }
@@ -110,57 +138,40 @@ export default function CreatePost() {
     [setValue, tags]
   );
 
-  // const handleImagesChange = useCallback(
-  //   (e) => {
-  //     const imagesArray = [];
-  //     for (let i = 0; i < e.target.files.length; i += 1) {
-  //       imagesArray.push(e.target.files[i]);
-  //     }
-  //     setValue('images', [...getValues('images'), ...imagesArray]);
-  //     trigger('images'); // trigger validate after images change
-  //   },
-  //   [getValues, setValue, trigger]
-  // );
+  const handleImagesChange = useCallback(
+    (e) => {
+      const imagesArray = [];
+      for (let i = 0; i < e.target.files.length; i += 1) {
+        imagesArray.push(e.target.files[i]);
+      }
+      setValue('images', [...getValues('images'), ...imagesArray]);
+    },
+    [getValues, setValue]
+  );
 
-  // const handleRemoveImage = useCallback(
-  //   (index) => {
-  //     setValue(
-  //       'images',
-  //       getValues('images').filter((_, i) => i !== index)
-  //     );
-  //     trigger('images'); // trigger validate after images change
-  //   },
-  //   [getValues, setValue, trigger]
-  // );
+  const handleRemoveImage = useCallback(
+    (index) => {
+      setValue(
+        'images',
+        getValues('images').filter((_, i) => i !== index)
+      );
+    },
+    [getValues, setValue]
+  );
 
   const onSubmit = useCallback(
     (data) => {
-      console.log(data);
-      setIsPosting(true);
-      data.verse = verse;
-
-      PostAPI.create(data).then((response) => {
-        // console.log(response);
-        setIsPosting(false);
-        if (!response.success) {
-          toast({
-            title: 'Đã có lỗi xảy ra!',
-            description: response.message,
-            duration: 3000,
-            status: 'error'
-          });
-        } else {
-          toast({
-            title: 'Đăng bài thành công',
-            duration: 3000,
-            status: 'success'
-          });
-          history(`/posts/${verse}/${response.newPostId}`);
-          reset();
-        }
+      const formData = new FormData();
+      formData.append('verse', verse);
+      Object.keys(data).forEach((key) => {
+        if (key !== 'images') formData.append(key, data[key]);
       });
+      for (let i = 0; i < getValues('images').length; i += 1) {
+        formData.append('images[]', getValues('images')[i]);
+      }
+      createPost(formData);
     },
-    [history, reset, toast, verse]
+    [createPost, getValues, verse]
   );
 
   return (
@@ -174,8 +185,8 @@ export default function CreatePost() {
       w="100%"
     >
       <Flex flexDirection="column">
-        <Flex justifyContent="space-between">
-          {/* <Box flexShrink={0} maxW="2xs" width="100%">
+        <Flex justifyContent="space-between" gap={5}>
+          <Box flexShrink={0} maxW="2xs" width="100%">
             <Flex
               bg="white"
               boxShadow="sm"
@@ -234,10 +245,8 @@ export default function CreatePost() {
                 <Text color="red">{errors.images.message}</Text>
               ) : null}
             </Flex>
-          </Box> */}
+          </Box>
           <Box
-            as="form"
-            onSubmit={handleSubmit(onSubmit)}
             onKeyDown={(e) => {
               if (e.keyCode === 'Enter') e.preventDefault();
             }}
@@ -345,7 +354,7 @@ export default function CreatePost() {
               >
                 <Button
                   isLoading={isPosting}
-                  type="submit"
+                  onClick={handleSubmit(onSubmit)}
                   colorScheme="purple"
                 >
                   Đăng câu hỏi

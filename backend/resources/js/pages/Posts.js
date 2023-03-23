@@ -30,33 +30,26 @@ import {
 import {
   HiChevronLeft,
   HiChevronRight,
-  HiOutlineEye,
-  HiOutlineLockClosed,
-  HiOutlineLockOpen,
-  HiOutlinePencil
+  HiOutlinePencil,
+  HiOutlineTrash
 } from 'react-icons/hi';
 import { useQuery } from 'react-query';
 import UserAPI from '../api/UserAPI';
 import AdminAPI from '../api/AdminAPI';
 import UserInfoFormDrawer from '../components/UserInfoFormDrawer';
-import { getAvatarPath } from '../helper/helper';
-import ChangePermissionMenu from '../components/ChangePermissionMenu';
+import PostFormDrawer from '../components/PostFormDrawer';
 
 const ConfirmToggleBlockUserModal = ({
   isOpen,
   onClose,
-  isIntendBlock,
-  selectedUser,
+  selectedPost,
   refetch
 }) => {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleToggleBlockUser = useCallback(() => {
     setIsSubmitting(true);
-    AdminAPI.toggleBlockUser({
-      userId: selectedUser.id,
-      type: isIntendBlock ? 'block' : 'unblock'
-    })
+    AdminAPI.deletePost({ id: selectedPost.id })
       .then((response) => {
         setIsSubmitting(false);
         toast({
@@ -75,24 +68,20 @@ const ConfirmToggleBlockUserModal = ({
           duration: 3000
         });
       });
-  }, [isIntendBlock, onClose, refetch, selectedUser.id, toast]);
+  }, [onClose, refetch, selectedPost.id, toast]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>
-          {`${isIntendBlock ? 'Khóa' : 'Mở khóa'} người dùng ${
-            selectedUser.display_name
-          }`}
-        </ModalHeader>
+        <ModalHeader>Xác nhận xóa bài đăng</ModalHeader>
         <ModalCloseButton />
         <ModalFooter>
           <Button mr={3} onClick={onClose}>
             Hủy
           </Button>
           <Button
-            colorScheme={isIntendBlock ? 'red' : 'green'}
+            colorScheme="red"
             onClick={handleToggleBlockUser}
             isLoading={isSubmitting}
           >
@@ -104,45 +93,30 @@ const ConfirmToggleBlockUserModal = ({
   );
 };
 
-export default function Users() {
+export default function Posts() {
   const [page, setPage] = useState(1);
   const [searchString, setSearchString] = useState('');
-  const [statusQuery, setStatusQuery] = useState('');
-  const [isIntendBlock, setIsIntendBlock] = useState(true);
-  const [selectedUser, setSelectedUser] = useState({});
+  const [filterQuery, setFilterQuery] = useState('');
+  const [selectedPost, setSelectedPost] = useState({});
   const [
     isOpenConfirmToggleBlockModal,
     setIsOpenConfirmToggleBlockModal
   ] = useState(false);
-  const [
-    isOpenUserInfoFormDrawer,
-    setIsOpenUserInfoFormDrawer
-  ] = useState(false);
 
-  const toggleConfirmBlockModal = useCallback((type, user) => {
-    if (type === 'block') {
-      setIsIntendBlock(true);
-    } else {
-      setIsIntendBlock(false);
-    }
-    setSelectedUser(user);
+  const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+  const togglePostForm = useCallback(() => {
+    setIsPostFormOpen((prev) => !prev);
+  }, []);
+
+  const toggleConfirmBlockModal = useCallback((post) => {
+    setSelectedPost(post);
     setIsOpenConfirmToggleBlockModal(true);
   }, []);
 
-  const toggleUserInfoFormDrawer = useCallback((user) => {
-    setSelectedUser(user);
-    setIsOpenUserInfoFormDrawer((prev) => !prev);
-  }, []);
-
-  const { isLoading, data: usersData, refetch } = useQuery(
-    ['users', page, searchString, statusQuery],
-    () => AdminAPI.getAllUsers(page, searchString, statusQuery),
+  const { isLoading, data: postsData, refetch } = useQuery(
+    ['posts', page, searchString, filterQuery],
+    () => AdminAPI.getAllPosts(page, searchString, filterQuery),
     { keepPreviousData: true }
-  );
-
-  const handleClickViewUser = useCallback(
-    (id) => window.open(`/profile/${id}`),
-    []
   );
 
   return (
@@ -153,7 +127,7 @@ export default function Users() {
       paddingInlineEnd={8}
       marginInline="auto"
       marginTop="2rem"
-      maxW="6xl"
+      maxW="10xl"
       w="100%"
     >
       <ConfirmToggleBlockUserModal
@@ -161,22 +135,23 @@ export default function Users() {
         onClose={() =>
           setIsOpenConfirmToggleBlockModal((prev) => !prev)
         }
-        isIntendBlock={isIntendBlock}
-        selectedUser={selectedUser}
+        selectedPost={selectedPost}
         refetch={refetch}
       />
-      <UserInfoFormDrawer
-        isOpen={isOpenUserInfoFormDrawer}
-        onClose={() => setIsOpenUserInfoFormDrawer((prev) => !prev)}
-        userData={selectedUser}
-        refetch={refetch}
-        isAdmin
-      />
+      {selectedPost && (
+        <PostFormDrawer
+          isOpen={isPostFormOpen}
+          onClose={togglePostForm}
+          postData={selectedPost}
+          refetch={refetch}
+          isAdmin
+        />
+      )}
       <Flex background="white" boxShadow="sm" borderRadius="lg">
         <TableContainer whiteSpace="unset" w="full">
           <Flex padding={6} justifyContent="space-between">
             <Text fontWeight="600" fontSize="xl">
-              Danh sách người dùng
+              Danh sách bài đăng
             </Text>
           </Flex>
           <Flex
@@ -197,13 +172,13 @@ export default function Users() {
               mr={6}
               mb={3}
               onChange={(e) => {
-                setStatusQuery(e.target.value);
+                setFilterQuery(e.target.value);
               }}
             >
               {[
-                { name: 'All', id: 'all' },
-                { name: 'Block', id: 'blocked' },
-                { name: 'Active', id: 'active' }
+                { name: 'None', id: 'none' },
+                { name: 'Upvote', id: 'upvote' },
+                { name: 'Downvote', id: 'downvote' }
               ].map(({ name, id }) => (
                 <option key={`category-filter-${id}`} value={id}>
                   {name}
@@ -214,10 +189,11 @@ export default function Users() {
           <Table variant="simple">
             <Thead>
               <Tr>
-                <Th>Tên</Th>
-                <Th>Trạng thái</Th>
-                <Th>Email</Th>
-                <Th>Về tôi</Th>
+                <Th>Tiêu đề</Th>
+                <Th>Nội dung</Th>
+                <Th>Người đăng</Th>
+                <Th>Lượt upvote</Th>
+                <Th>Lượt downvote</Th>
                 <Th>Thao tác</Th>
               </Tr>
             </Thead>
@@ -231,84 +207,59 @@ export default function Users() {
               </Tbody>
             ) : (
               <Tbody>
-                {usersData?.data?.length > 0 &&
-                  usersData.data.map((user, i) => (
-                    <Tr key={`user-${i + 1}`}>
+                {postsData?.data?.length > 0 &&
+                  postsData.data.map((post, i) => (
+                    <Tr key={`post-${i + 1}`}>
                       <Td>
-                        <Flex alignItems="center" gap={3}>
-                          <Avatar
-                            bg="purple.200"
-                            size="md"
-                            src={getAvatarPath(user.avatar?.name)}
-                          />
-                          <Text fontWeight={500}>
-                            {user.display_name}
-                          </Text>
-                        </Flex>
-                      </Td>
-                      <Td>
-                        <Badge
-                          fontSize="14px"
-                          borderRadius="lg"
-                          textTransform="lowercase"
-                          colorScheme={
-                            user.status === 'active' ? 'green' : 'red'
+                        <Button
+                          variant="link"
+                          onClick={() =>
+                            window.open(
+                              `/posts/${post?.university?.slug}/${post?.id}`
+                            )
                           }
                         >
-                          {user.status}
-                        </Badge>
+                          {post.title}
+                        </Button>
+                      </Td>
+                      <Td>{post.body}</Td>
+                      <Td>
+                        <Button
+                          variant="link"
+                          onClick={() =>
+                            window.open(`/profile/${post?.user?.id}`)
+                          }
+                        >
+                          {post?.user?.display_name}
+                        </Button>
                       </Td>
                       <Td>
-                        <Text color="gray.600">{user.email}</Text>
+                        <Text color="gray.600">
+                          {post?.upvoteCount}
+                        </Text>
                       </Td>
                       <Td>
-                        <Text color="gray.600">{user.about}</Text>
+                        <Text color="gray.600">
+                          {post?.downvoteCount}
+                        </Text>
                       </Td>
                       <Td>
                         <Flex gap={1}>
                           <IconButton
-                            icon={<HiOutlineEye />}
-                            fontSize="20px"
-                            onClick={() =>
-                              handleClickViewUser(user.id)
-                            }
-                          />
-                          <IconButton
                             icon={<HiOutlinePencil />}
                             fontSize="20px"
-                            onClick={() =>
-                              toggleUserInfoFormDrawer(user)
-                            }
+                            onClick={() => {
+                              setSelectedPost(post);
+                              togglePostForm(post);
+                            }}
                           />
-                          {user.status === 'blocked' ? (
-                            <IconButton
-                              colorScheme="green"
-                              icon={<HiOutlineLockOpen />}
-                              fontSize="20px"
-                              onClick={() =>
-                                toggleConfirmBlockModal(
-                                  'unblock',
-                                  user
-                                )
-                              }
-                            />
-                          ) : (
-                            <IconButton
-                              colorScheme="red"
-                              icon={<HiOutlineLockClosed />}
-                              fontSize="20px"
-                              onClick={() =>
-                                toggleConfirmBlockModal('block', user)
-                              }
-                            />
-                          )}
-                          <ChangePermissionMenu
-                            canCreatePost={user?.canCreatePost}
-                            canEditPost={user?.canEditPost}
-                            canComment={user?.canComment}
-                            canVote={user?.canVote}
-                            userId={user?.id}
-                            refetch={refetch}
+                          <IconButton
+                            colorScheme="red"
+                            icon={<HiOutlineTrash />}
+                            fontSize="20px"
+                            onClick={() =>
+                              toggleConfirmBlockModal(post)
+                            }
                           />
                         </Flex>
                       </Td>
@@ -317,7 +268,7 @@ export default function Users() {
               </Tbody>
             )}
           </Table>
-          {!isLoading && usersData?.data?.length === 0 ? (
+          {!isLoading && postsData?.data?.length === 0 ? (
             <Box textAlign="center" p="20px	100px" color="gray.800">
               Chưa có người dùng
             </Box>
@@ -326,14 +277,14 @@ export default function Users() {
               <Button
                 leftIcon={<HiChevronLeft />}
                 onClick={() => setPage((old) => Math.max(old - 1, 0))}
-                isDisabled={!usersData?.prev_page_url}
+                isDisabled={!postsData?.prev_page_url}
               >
                 Trước
               </Button>
               <Button
                 rightIcon={<HiChevronRight />}
                 onClick={() => setPage((old) => old + 1)}
-                isDisabled={!usersData?.next_page_url}
+                isDisabled={!postsData?.next_page_url}
               >
                 Sau
               </Button>

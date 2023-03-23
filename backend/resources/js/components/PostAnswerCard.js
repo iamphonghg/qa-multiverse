@@ -202,29 +202,27 @@ export default function PostAnswerCard({
           _hover={{ background: 'none' }}
           _focus={{ border: 'none' }}
         />
-        {currentUser?.id === parentAuthorId ? (
-          <IconButton
-            onClick={handleMarkAsAcceptdAnswer}
-            icon={
-              <Icon
-                as={HiCheck}
-                w={10}
-                h={10}
-                color={
-                  data.post.isAcceptedAnswer
-                    ? 'green.600'
-                    : 'gray.300'
-                }
-              />
-            }
-            size="lg"
-            background="none"
-            w="75px"
-            mt={2}
-            _hover={{ background: 'none' }}
-            _focus={{ border: 'none' }}
-          />
-        ) : null}
+				<IconButton
+					onClick={currentUser?.id === parentAuthorId ?handleMarkAsAcceptdAnswer : () => {}}
+					icon={
+						<Icon
+							as={HiCheck}
+							w={10}
+							h={10}
+							color={
+								data.post.isAcceptedAnswer
+									? 'green.600'
+									: 'gray.300'
+							}
+						/>
+					}
+					size="lg"
+					background="none"
+					w="75px"
+					mt={2}
+					_hover={{ background: 'none' }}
+					_focus={{ border: 'none' }}
+				/>
       </Flex>
       <Flex flexDir="column" w="full">
         <Flex

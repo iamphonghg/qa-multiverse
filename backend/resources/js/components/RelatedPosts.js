@@ -16,7 +16,6 @@ export default function RelatedPosts({ postId, verse }) {
     () => PostAPI.getRelatedPosts(postId)
   );
 
-  console.log(data);
   if (isLoading) {
     return (
       <Flex

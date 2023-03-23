@@ -18,6 +18,8 @@ class Post extends Model
         'isAcceptedAnswer',
         'upvoteCount',
         'downvoteCount',
+        'images',
+        'university'
     ];
     public $timestamps = false;
 
@@ -43,6 +45,13 @@ class Post extends Model
 
     public function university() {
         return $this->belongsTo(University::class);
+    }
+
+    public function getImagesAttribute() {
+        return Image::where('status', 'ready')
+            ->where('model_id', $this->id)
+            ->where('belong_to_model', Post::class)
+            ->get();
     }
 
     public function getScoreAttribute()
@@ -109,4 +118,7 @@ class Post extends Model
         return false;
     }
 
+    public function getUniversityAttribute() {
+        return University::find($this->university_id);
+    }
 }

@@ -8,7 +8,6 @@ import {
   InputRightElement
 } from '@chakra-ui/react';
 import { HiOutlineSearch } from 'react-icons/hi';
-import Autocomplete from 'react-autocomplete';
 
 export default function SearchBox() {
   const [inputString, setInputString] = useState('');

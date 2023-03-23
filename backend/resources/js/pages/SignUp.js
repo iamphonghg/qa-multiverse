@@ -33,7 +33,6 @@ export default function SignUp() {
 
   const onSubmit = useCallback(
     (data) => {
-      console.log(data);
       UserAuthAPI.register(data).then((response) => {
         if (!response.error) {
           toast({

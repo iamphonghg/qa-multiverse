@@ -12,8 +12,9 @@ import {
   HiOutlineHome,
   HiOutlineUser,
   HiOutlineFlag,
-  HiOutlinePresentationChartLine,
-  HiOutlineLogout
+  HiOutlineLogout,
+  HiOutlineAnnotation,
+  HiOutlineBell
 } from 'react-icons/hi';
 import {
   Link as NavLink,
@@ -38,6 +39,21 @@ const siderBarItems = [
     title: 'Người dùng',
     url: '/admin/users',
     icon: HiOutlineUser
+  },
+  {
+    title: 'Bài đăng',
+    url: '/admin/posts',
+    icon: HiOutlineAnnotation
+  },
+  {
+    title: 'Báo cáo vi phạm',
+    url: '/admin/reports',
+    icon: HiOutlineFlag
+  },
+  {
+    title: 'Thông báo',
+    url: '/admin/notifications',
+    icon: HiOutlineBell
   }
 ];
 

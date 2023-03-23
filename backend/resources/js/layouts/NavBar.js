@@ -26,6 +26,7 @@ import { useAppContext } from '../contexts/AppContext';
 import UserAuthAPI from '../api/UserAuthAPI';
 import { setUserToken } from '../utils/userAuth';
 import SearchBox from '../components/SearchBox';
+import NotificationPopover from '../components/NotificationPopover';
 
 const headerLinks = [
   { content: 'Trang chủ', icon: HiOutlineHome, to: '/' },
@@ -73,7 +74,7 @@ export default function NavBar() {
         backgroundColor="purple.300"
         position="sticky"
         top={0}
-        zIndex="1000"
+        zIndex="10"
       >
         <Flex alignItems="center" w="5xl" minW="sm" m="0 auto">
           <Flex
@@ -111,6 +112,7 @@ export default function NavBar() {
           </Flex>
           <Flex flex="0.7 0 auto" justifyContent="flex-end">
             <Flex gap={7} alignItems="center">
+              <NotificationPopover />
               {headerLinks.map(({ content, icon, to }, i) => (
                 <Link
                   as={NavLink}
@@ -136,7 +138,7 @@ export default function NavBar() {
         backgroundColor="purple.300"
         position="sticky"
         top={14}
-        zIndex="1000"
+        zIndex="10"
         pb={3}
       >
         <Flex

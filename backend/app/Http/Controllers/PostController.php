@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\Post;
 use App\Models\PostImage;
 use App\Models\PostTag;
 use App\Models\Tag;
 use App\Models\University;
+use App\Models\User;
 use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -98,7 +100,15 @@ class PostController extends Controller
     }
 
     public function create(Request $request) {
+        if (!\auth()->user()->can('create_post')){
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền thực hiện hành động này'
+            ]);
+        }
         $userId = auth()->id();
+        $images = $request->file('images');
+//        dd($request->all());
         $university = University::where('slug', $request['verse'])->first();
         if ($university) {
             $newPostData = [
@@ -110,20 +120,26 @@ class PostController extends Controller
             ];
             $newPost = Post::factory()
                 ->create($newPostData);
-//            if ($request->file('images')) {
-//                foreach ($request->file('images') as $image) {
-//                    $filename = time().rand(1,10).'.'.$image->getClientOriginalExtension();
-//                    $directoryPath = "post_img/".$request['category'];
-//                    $image->move("uploaded_img/$directoryPath/", $filename);
-//                    PostImage::create([
-//                        'post_id' => $newPost->id,
-//                        'filename' => $filename,
-//                        'directory_path' => $directoryPath
-//                    ]);
-//                }
-//            }
-            if ($request['tags'] and count($request['tags']) > 0) {
-                foreach ($request['tags'] as $tag) {
+            if ($images) {
+                foreach ($images as $image) {
+                    $originalName = $image->getClientOriginalName();
+                    $originalExtension = $image->getClientOriginalExtension();
+                    $fileSize = $image->getSize();
+                    $filename = time().rand(1,10).'.'.$originalExtension;
+                    $image->move("uploaded_img/post_img/", $filename);
+                    Image::create([
+                        'model_id' => $newPost->id,
+                        'belong_to_model' => Post::class,
+                        'name' => $filename,
+                        'original_name' => $originalName,
+                        'size' => $fileSize,
+                        'status' => 'ready',
+                        'extension' => $originalExtension
+                    ]);
+                }
+            }
+            if ($request['tags'] and count(explode(',', $request['tags'])) > 0) {
+                foreach (explode(',', $request['tags']) as $tag) {
                     $newTag = Tag::factory()->create([
                         'university_id' => $university->id,
                         'user_id' => auth()->id(),
@@ -148,6 +164,12 @@ class PostController extends Controller
     }
 
     public function upvote(Request $request) {
+        if (!\auth()->user()->can('vote')){
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền thực hiện hành động này'
+            ]);
+        }
         $postId = $request['postId'];
         $upvote = Vote::where([
             ['post_id', '=', $postId],
@@ -187,6 +209,12 @@ class PostController extends Controller
     }
 
     public function downvote(Request $request) {
+        if (!\auth()->user()->can('vote')){
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền thực hiện hành động này'
+            ]);
+        }
         $postId = $request['postId'];
         $downvote = Vote::where([
             ['post_id', '=', $postId],
@@ -259,8 +287,8 @@ class PostController extends Controller
     }
 
     public function getRelatedPosts($id) {
-        $post = Post::find($id);
-        if (!$post) {
+        $postToFind = Post::find($id);
+        if (!$postToFind) {
             return [
                 'success' => true,
                 'relatedPosts' => []
@@ -269,7 +297,7 @@ class PostController extends Controller
 
         $relatedPosts = collect([]);
 
-        $tags = $post->tags;
+        $tags = $postToFind->tags;
 
         foreach ($tags as $tag) {
             $posts = $tag->posts;
@@ -279,7 +307,7 @@ class PostController extends Controller
         }
 
         $relatedPosts = $relatedPosts->where('id', '!=', $id)
-            ->where('university_id', $post->university_id)
+            ->where('university_id', $postToFind->university_id)
             ->whereNull('parent_id')
             ->values();
 

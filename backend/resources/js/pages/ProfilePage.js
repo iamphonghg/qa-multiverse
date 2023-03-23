@@ -1,37 +1,51 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Avatar,
+  Badge,
   Button,
   Flex,
   Grid,
   GridItem,
+  IconButton,
   Spinner,
-  Text
+  Text,
+  Tooltip
 } from '@chakra-ui/react';
 import { useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import {
+  HiChevronLeft,
+  HiChevronRight,
+  HiFlag
+} from 'react-icons/hi';
 import moment from 'moment';
 import UserAPI from '../api/UserAPI';
 import UserInfoFormDrawer from '../components/UserInfoFormDrawer';
 import { useUserAuth } from '../contexts/UserAuthContext';
+import { getAvatarPath } from '../helper/helper';
+import ReportUserModal from '../components/ReportUserModal';
 
 export default function ProfilePage() {
   const { id } = useParams();
   const history = useNavigate();
-  const { currentUser } = useUserAuth();
-  const { isLoading, data } = useQuery(['profile-page', id], () =>
-    UserAPI.getUserInfo(id)
+  const { authenticated, currentUser } = useUserAuth();
+  const [page, setPage] = useState(1);
+  const { isLoading, data, refetch } = useQuery(
+    ['profile-page', id, page],
+    () => UserAPI.getUserInfo(id, page)
   );
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [
     isOpenUserInfoFormDrawer,
     setIsOpenUserInfoFormDrawer
   ] = useState(false);
 
+  const toggleReportModal = useCallback(() => {
+    setIsReportModalOpen((prev) => !prev);
+  }, []);
   const toggleUserInfoFormDrawer = useCallback(() => {
     setIsOpenUserInfoFormDrawer((prev) => !prev);
   }, []);
-
-  console.log(data);
 
   return isLoading ? (
     <Spinner />
@@ -42,11 +56,16 @@ export default function ProfilePage() {
           isOpen={isOpenUserInfoFormDrawer}
           onClose={toggleUserInfoFormDrawer}
           userData={data.userInfo}
+          refetch={refetch}
         />
       )}
       <Flex justifyContent="space-between">
         <Flex alignItems="center" gap={5}>
-          <Avatar size="2xl" />
+          <Avatar
+            bg="purple.200"
+            size="2xl"
+            src={getAvatarPath(data?.userInfo?.avatar?.name)}
+          />
           <Flex flexDir="column">
             <Text fontWeight={500} fontSize="3xl">
               {data.userInfo.display_name}
@@ -61,6 +80,21 @@ export default function ProfilePage() {
           <Button onClick={toggleUserInfoFormDrawer}>
             Sửa thông tin
           </Button>
+        )}
+        {authenticated && data?.userInfo?.id !== currentUser?.id && (
+          <>
+            <ReportUserModal
+              isOpen={isReportModalOpen}
+              onClose={toggleReportModal}
+              userId={data?.userInfo?.id}
+            />
+            <Tooltip label="Báo cáo người dùng này">
+              <IconButton
+                icon={<HiFlag fontSize="1.5rem" />}
+                onClick={toggleReportModal}
+              />
+            </Tooltip>
+          </>
         )}
       </Flex>
       <Flex gap={6}>
@@ -136,8 +170,8 @@ export default function ProfilePage() {
               borderRadius="md"
               flexDir="column"
             >
-              {data.posts.length > 0 ? (
-                data.posts.map((post) => (
+              {data.posts.data.length > 0 ? (
+                data.posts.data.map((post, i) => (
                   <Flex
                     justifyContent="space-between"
                     p={2}
@@ -156,6 +190,7 @@ export default function ProfilePage() {
                         );
                       }
                     }}
+                    key={`profile-page-post-${i + 1}`}
                   >
                     <Flex w="70%" gap={2}>
                       <Flex gap={2} alignItems="center">
@@ -197,7 +232,12 @@ export default function ProfilePage() {
                       </Flex>
                       <Text>{post.title || post.body}</Text>
                     </Flex>
-                    <Text>Aug 18, 2021</Text>
+                    <Flex alignItems="center" gap={2}>
+                      <Badge bg="purple.400" color="white">
+                        {post?.university?.slug}
+                      </Badge>
+                      <Text>Aug 18, 2021</Text>
+                    </Flex>
                   </Flex>
                 ))
               ) : (
@@ -213,6 +253,26 @@ export default function ProfilePage() {
                 </Flex>
               )}
             </Flex>
+            {data.posts.data.length > 0 && (
+              <Flex justifyContent="space-between" px={6} py={2}>
+                <Button
+                  leftIcon={<HiChevronLeft />}
+                  onClick={() =>
+                    setPage((old) => Math.max(old - 1, 0))
+                  }
+                  isDisabled={!data.posts?.prev_page_url}
+                >
+                  Trước
+                </Button>
+                <Button
+                  rightIcon={<HiChevronRight />}
+                  onClick={() => setPage((old) => old + 1)}
+                  isDisabled={!data.posts?.next_page_url}
+                >
+                  Sau
+                </Button>
+              </Flex>
+            )}
           </Flex>
         </Flex>
       </Flex>

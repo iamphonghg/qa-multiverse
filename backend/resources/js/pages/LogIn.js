@@ -44,7 +44,6 @@ export default function LogIn() {
     (data) => {
       AuthAPI.login(data)
         .then((response) => {
-          console.log(response);
           if (response.success) {
             setUserToken(response.token.access_token);
             setCurrentUser(response.user);

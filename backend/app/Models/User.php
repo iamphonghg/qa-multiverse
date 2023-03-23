@@ -7,13 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     public $timestamps = false;
+
+    protected $appends = [
+        'avatar',
+        'canCreatePost',
+        'canVote',
+        'canEditPost',
+        'canComment'
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -59,5 +68,30 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function getAvatarAttribute() {
+        $avatar = Image::where('model_id', $this->id)
+            ->where('belong_to_model', User::class)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($avatar && $avatar->status == 'ready') {
+            return $avatar;
+        }
+        return null;
+    }
+
+    public function getCanCreatePostAttribute() {
+        return $this->can('create_post');
+    }
+    public function getCanVoteAttribute() {
+        return $this->can('vote');
+    }
+    public function getCanEditPostAttribute() {
+        return $this->can('edit_post');
+    }
+    public function getCanCommentAttribute() {
+        return $this->can('comment');
     }
 }

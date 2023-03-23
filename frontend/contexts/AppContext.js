@@ -24,7 +24,6 @@ function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    console.log('lol', verse);
     if (!verses.includes(verse)) {
       setIsOpenSelectVerseModal(true);
     }

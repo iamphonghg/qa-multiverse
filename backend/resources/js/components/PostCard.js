@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text, Icon } from '@chakra-ui/react';
+import { HiCamera } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import { useAppContext } from '../contexts/AppContext';
@@ -21,7 +22,6 @@ export default function PostCard({ post }) {
   const handleClickPostCard = useCallback(
     (e) => {
       const clicked = e.target;
-      console.log(clicked);
       const target = clicked.tagName.toLowerCase();
       const ignores = ['button', 'svg'];
       if (!ignores.includes(target)) {
@@ -64,6 +64,9 @@ export default function PostCard({ post }) {
           </Box>
         </Flex>
         <Flex justifyContent="flex-end" gap={3} alignItems="center">
+          {post.images?.length > 0 && (
+            <Icon as={HiCamera} color="purple.300" />
+          )}
           <Text>{user.display_name}</Text>
           <Text fontSize="sm" color="gray.400" fontWeight="500">
             đã hỏi{' '}

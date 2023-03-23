@@ -6,6 +6,7 @@ import AppFrame from './layouts/AppFrame';
 import UserAuthProvider from './contexts/UserAuthContext';
 import AppProvider from './contexts/AppContext';
 import AdminAuthProvider from './contexts/AdminAuthContext';
+import NotificationProvider from './contexts/NotificationContext';
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,7 @@ export default function App() {
     },
     fonts: {
       body: "'SF Pro Display', sans-serif",
-      logoFont: "'Sofia', cursive;",
+      logoFont: "'Sofia', cursive;"
     }
   });
 
@@ -34,7 +35,9 @@ export default function App() {
         <AppProvider>
           <AdminAuthProvider>
             <UserAuthProvider>
-              <AppFrame />
+              <NotificationProvider>
+                <AppFrame />
+              </NotificationProvider>
             </UserAuthProvider>
           </AdminAuthProvider>
         </AppProvider>

@@ -29,11 +29,17 @@ Route::prefix('user')->group(function () {
 
 
         Route::post('createPost', [PostController::class, 'create']);
+        Route::post('updatePost', [UserController::class, 'updatePost']);
+        Route::post('reportPost', [UserController::class, 'reportPost']);
+        Route::post('reportUser', [UserController::class, 'reportUser']);
+        Route::post('toggleNewNoti', [UserController::class, 'toggleNewNoti']);
+        Route::get('getNotifications', [UserController::class, 'getNotifications']);
         Route::post('upvote', [PostController::class, 'upvote']);
         Route::post('downvote', [PostController::class, 'downvote']);
         Route::post('comment', [CommentController::class, 'comment']);
         Route::post('markAsAcceptedAnswer', [PostController::class, 'markAsAcceptedAnswer']);
         Route::get('getAllPostsOfCurrentUser', [PostController::class, 'getAllPostsOfCurrentUser']);
+
     });
 });
 
@@ -49,9 +55,16 @@ Route::prefix('admin')->group(function () {
         Route::get('userStatsByMonthInYear/{year}', [AdminController::class, 'getUserStatsByMonthInYear']);
         Route::get('postStatsByUniversity', [AdminController::class, 'getPostStatsByUniversity']);
         Route::get('getAllUsers', [AdminController::class, 'getAllUsers']);
+        Route::get('getReports', [AdminController::class, 'getReports']);
         Route::post('updateUserInfo', [AdminController::class, 'updateUserInfo']);
+        Route::post('createNotification', [AdminController::class, 'createNotification']);
+        Route::post('updatePost', [AdminController::class, 'updatePost']);
         Route::post('toggleBlockUser', [AdminController::class, 'toggleBlockUser']);
-
+        Route::get('getAllPosts', [AdminController::class, 'getAllPosts']);
+        Route::get('getNotifications', [AdminController::class, 'getNotifications']);
+        Route::post('deletePost', [AdminController::class, 'deletePost']);
+        Route::post('changePermisison', [AdminController::class, 'changePermisison']);
+        Route::post('reviewReport', [AdminController::class, 'reviewReport']);
     });
 });
 

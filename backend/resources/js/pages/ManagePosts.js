@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -17,26 +17,37 @@ import {
 import {
   HiChevronLeft,
   HiChevronRight,
-  HiOutlineEye
+  HiOutlineEye,
+  HiPencil
 } from 'react-icons/hi';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import PostAPI from '../api/PostAPI';
+import PostFormDrawer from '../components/PostFormDrawer';
 
 export default function ManagePosts() {
   const [page, setPage] = useState(1);
   const history = useNavigate();
-  const { isLoading, data: postsData } = useQuery(
+  const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+
+  const togglePostForm = useCallback(() => {
+    setIsPostFormOpen((prev) => !prev);
+  }, []);
+
+  const { isLoading, data: postsData, refetch } = useQuery(
     ['posts', page],
     () => PostAPI.getAllPostsOfCurrentUser(page),
     { keepPreviousData: true }
   );
 
-  console.log(postsData);
-
   useEffect(() => {
     moment.locale('vi');
+
+    return () => {
+      setSelectedPost(null);
+    };
   }, []);
 
   return (
@@ -50,6 +61,14 @@ export default function ManagePosts() {
       maxW="6xl"
       w="100%"
     >
+      {selectedPost && (
+        <PostFormDrawer
+          isOpen={isPostFormOpen}
+          onClose={togglePostForm}
+          postData={selectedPost}
+          refetch={refetch}
+        />
+      )}
       <Flex background="white" boxShadow="sm" borderRadius="lg">
         <TableContainer whiteSpace="unset" w="full">
           <Flex
@@ -92,15 +111,25 @@ export default function ManagePosts() {
                       <Td>{post.downvoteCount}</Td>
                       <Td>{moment(post.created_at).format('lll')}</Td>
                       <Td>
-                        <IconButton
-                          icon={<HiOutlineEye />}
-                          fontSize="20px"
-                          onClick={() =>
-                            history(
-                              `/posts/${post.university.slug}/${post.id}`
-                            )
-                          }
-                        />
+                        <Flex gap={2}>
+                          <IconButton
+                            icon={<HiOutlineEye />}
+                            fontSize="20px"
+                            onClick={() =>
+                              history(
+                                `/posts/${post.university.slug}/${post.id}`
+                              )
+                            }
+                          />
+                          <IconButton
+                            icon={<HiPencil />}
+                            fontSize="20px"
+                            onClick={() => {
+                              setSelectedPost(post);
+                              togglePostForm();
+                            }}
+                          />
+                        </Flex>
                       </Td>
                     </Tr>
                   ))}

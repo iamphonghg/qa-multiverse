@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Badge,
   Box,
@@ -8,27 +8,49 @@ import {
   Flex,
   Icon,
   IconButton,
+  Image,
   SkeletonText,
   Text,
   Textarea,
+  Tooltip,
   useToast
 } from '@chakra-ui/react';
 import moment from 'moment';
-import { HiChevronDown, HiChevronUp } from 'react-icons/hi';
+import {
+  HiChevronDown,
+  HiChevronUp,
+  HiFlag,
+  HiPencil
+} from 'react-icons/hi';
 import { useQuery } from 'react-query';
 import { useForm } from 'react-hook-form';
+import Zoom from 'react-medium-image-zoom';
 import { useNavigate } from 'react-router-dom';
 import PostAPI from '../api/PostAPI';
 import Comment from './Comment';
 import { useUserAuth } from '../contexts/UserAuthContext';
 import CommentAPI from '../api/CommentAPI';
+import { getImagePath } from '../helper/helper';
+import 'react-medium-image-zoom/dist/styles.css';
+import PostFormDrawer from './PostFormDrawer';
+import ReportModal from './ReportModal';
 
 export default function DetailPostCard({ verse, postId }) {
   const [isOpenCommentInput, setIsOpenCommentInput] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
-  const { authenticated } = useUserAuth();
+  const { authenticated, currentUser } = useUserAuth();
   const toast = useToast();
   const history = useNavigate();
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isPostFormOpen, setIsPostFormOpen] = useState(false);
+  const togglePostForm = useCallback(() => {
+    setIsPostFormOpen((prev) => !prev);
+  }, []);
+
+  const toggleReportModal = useCallback(() => {
+    setIsReportModalOpen((prev) => !prev);
+  }, []);
 
   const { register, handleSubmit, reset } = useForm();
 
@@ -40,8 +62,17 @@ export default function DetailPostCard({ verse, postId }) {
   const handleUpvote = useCallback(
     (id) => {
       if (authenticated) {
-        PostAPI.upvote({ postId: id }).then(() => {
-          refetch();
+        PostAPI.upvote({ postId: id }).then((response) => {
+          if (response.success) {
+            refetch();
+          } else {
+            toast({
+              title: response.message,
+              duration: 3000,
+              status: 'error',
+              position: 'top'
+            });
+          }
         });
       } else {
         toast({
@@ -58,8 +89,17 @@ export default function DetailPostCard({ verse, postId }) {
   const handleDownvote = useCallback(
     (id) => {
       if (authenticated) {
-        PostAPI.downvote({ postId: id }).then(() => {
-          refetch();
+        PostAPI.downvote({ postId: id }).then((response) => {
+          if (response.success) {
+            refetch();
+          } else {
+            toast({
+              title: response.message,
+              duration: 3000,
+              status: 'error',
+              position: 'top'
+            });
+          }
         });
       } else {
         toast({
@@ -141,13 +181,37 @@ export default function DetailPostCard({ verse, postId }) {
         borderBottomWidth={1}
         borderColor="gray.200"
         flexDir="column"
+        position="relative"
       >
+        {currentUser?.id === data?.post?.user_id && (
+          <>
+            <PostFormDrawer
+              isOpen={isPostFormOpen}
+              onClose={togglePostForm}
+              postData={data.post}
+              refetch={refetch}
+            />
+            <Box position="absolute" top={2} right={2}>
+              <IconButton
+                onClick={togglePostForm}
+                icon={<HiPencil fontSize="1.5rem" />}
+                variant="ghost"
+                size="lg"
+              />
+            </Box>
+          </>
+        )}
         <Text fontSize="3xl" fontWeight={500}>
           {data.post.title}
         </Text>
-        <Text color="gray.500">
-          Đã hỏi {moment(new Date(data.post.created_at)).fromNow()}
-        </Text>
+        <Flex alignItems="center" gap={2}>
+          <Text color="gray.500">
+            Đã hỏi {moment(new Date(data.post.created_at)).fromNow()}
+          </Text>
+          <Badge bg="purple.400" color="white">
+            {verse}
+          </Badge>
+        </Flex>
       </Flex>
       <Flex p={4} gap={4}>
         <Flex flexDir="column" alignItems="center" w="90px">
@@ -198,6 +262,21 @@ export default function DetailPostCard({ verse, postId }) {
             _hover={{ background: 'none' }}
             _focus={{ border: 'none' }}
           />
+          {authenticated && currentUser?.id !== data?.post?.user_id && (
+            <>
+              <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={toggleReportModal}
+                postId={postId}
+              />
+              <Tooltip label="Báo cáo bài đăng này">
+                <IconButton
+                  icon={<HiFlag fontSize="1.5rem" />}
+                  onClick={toggleReportModal}
+                />
+              </Tooltip>
+            </>
+          )}
         </Flex>
         <Flex flexDir="column" w="full">
           <Flex
@@ -213,6 +292,19 @@ export default function DetailPostCard({ verse, postId }) {
                 <Badge key={`tag-${tag.name}`}>{tag.name}</Badge>
               ))}
             </Flex>
+            {data.post?.images.length > 0 && (
+              <Flex gap={2} my={2}>
+                {data.post?.images.map((image, i) => (
+                  <Zoom key={`detail-card-zoom-${i + 1}`}>
+                    <Image
+                      boxSize="100px"
+                      objectFit="cover"
+                      src={getImagePath(image.name)}
+                    />
+                  </Zoom>
+                ))}
+              </Flex>
+            )}
             <Flex justifyContent="flex-end">
               <Flex
                 flexDir="column"

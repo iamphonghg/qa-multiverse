@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 class CommentController extends Controller
 {
     public function comment(Request $request) {
+        if (!\auth()->user()->can('comment')){
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không có quyền thực hiện hành động này'
+            ]);
+        }
         try {
             Comment::factory()->create([
                 'post_id' => $request['postId'],

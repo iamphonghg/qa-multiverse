@@ -1,6 +1,8 @@
 import {
   ADMIN_UPDATE_USER_INFO_ENDPOINT,
+  DELETE_POST_ENDPOINT,
   GET_ALL_ANSWERS_COUNT_ENDPOINT,
+  GET_ALL_POSTS_ENDPOINT,
   GET_ALL_QUESTIONS_COUNT_ENDPOINT,
   GET_ALL_USERS_COUNT_ENDPOINT,
   GET_ALL_USERS_ENDPOINT,
@@ -17,6 +19,20 @@ class AdminAPI {
     const token = getAdminToken();
     const response = await instanceAxios.get(
       GET_ALL_QUESTIONS_COUNT_ENDPOINT,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async updatePost(data) {
+    const token = getAdminToken();
+    const response = await instanceAxios.post(
+      'admin/updatePost',
+      data,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -91,10 +107,23 @@ class AdminAPI {
     return response.data;
   }
 
-  static async getAllUsers(page) {
+  static async getAllUsers(page, searchString, statusQuery) {
     const token = getAdminToken();
     const response = await instanceAxios.get(
-      `${GET_ALL_USERS_ENDPOINT}?page=${page}`,
+      `${GET_ALL_USERS_ENDPOINT}?page=${page}&searchString=${searchString}&statusQuery=${statusQuery}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async getAllPosts(page, searchString) {
+    const token = getAdminToken();
+    const response = await instanceAxios.get(
+      `${GET_ALL_POSTS_ENDPOINT}?page=${page}&searchString=${searchString}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -131,6 +160,89 @@ class AdminAPI {
     );
     return response.data;
   }
+
+  static async deletePost(data) {
+    const token = getAdminToken();
+    const response = await instanceAxios.post(
+      DELETE_POST_ENDPOINT,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async reviewReport(data) {
+    const token = getAdminToken();
+    const response = await instanceAxios.post(
+      'admin/reviewReport',
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async createNotification(data) {
+    const token = getAdminToken();
+    const response = await instanceAxios.post(
+      'admin/createNotification',
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async changePermisison(data) {
+    const token = getAdminToken();
+    const response = await instanceAxios.post(
+      'admin/changePermisison',
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async getNotifications(page = 1) {
+    const token = getAdminToken();
+    const response = await instanceAxios.get(
+      `admin/getNotifications?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
+  static async getReports(page, type, status) {
+    const token = getAdminToken();
+    const response = await instanceAxios.get(
+      `admin/getReports?page=${page}&type=${type}&status=${status}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  }
+
   // static async toggleBlockUser(data) {
   //   const token = getAdminToken();
   //   const response = await instanceAxios.post(

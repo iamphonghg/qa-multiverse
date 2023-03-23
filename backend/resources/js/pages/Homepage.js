@@ -20,8 +20,6 @@ export default function Homepage() {
     }
   );
 
-  console.log(data);
-
   if (!verse) return <PostListSkeleton />;
 
   if (isLoading) return <PostListSkeleton />;
